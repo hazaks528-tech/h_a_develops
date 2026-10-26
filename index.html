@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#101a17">
+  <title>Snake — Arcade Game</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js" defer></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js" defer></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js" defer></script>
+  <script src="firebase-config.js" defer></script>
+  <script src="room.js" defer></script>
+  <script src="game.js" defer></script>
+</head>
+<body>
+  <section class="intro-screen" id="intro-screen" aria-label="Developer intro">
+    <div class="intro-logo">H_A_<span>DEVELOPS</span></div>
+    <p> presents </p>
+    <div class="intro-game-name">SNAKE ARCADE</div>
+  </section>
+
+  <section class="menu-screen is-hidden" id="main-menu" aria-label="Main menu">
+    <div class="menu-card">
+      <div class="menu-brand">H_A_<span>DEVELOPS</span></div>
+      <p class="eyebrow">ARCADE GAME</p>
+      <h1>SNAKE<span class="brand-dot">.</span></h1>
+      <p class="menu-description">Collect apples, earn coins, unlock levels, and customize your snake.</p>
+      <p class="coin-wallet">🪙 Coins: <strong id="menu-coins">0</strong></p>
+      <button class="button button-primary menu-button" id="menu-start">Start Game →</button>
+      <button class="button button-secondary menu-button" id="menu-online">🌐 Online Room Competition</button>
+      <button class="button button-secondary menu-button" id="menu-levels">Level Select</button>
+      <button class="button button-secondary menu-button" id="menu-shop">🐍 Snake Skin Shop</button>
+      <button class="button button-secondary menu-button" id="menu-settings">Settings</button>
+      <button class="button button-secondary menu-button" id="menu-extras">🎁 Rewards & Extras</button>
+    </div>
+  </section>
+
+  <section class="menu-screen is-hidden" id="level-menu" aria-label="Level selection">
+    <div class="menu-card menu-card-wide">
+      <p class="eyebrow">CHOOSE YOUR CHALLENGE</p>
+      <h2>Select Level</h2>
+      <p class="menu-description" id="unlock-summary">Unlocked levels can be selected. Locked levels open as you progress.</p>
+      <div class="level-picker" id="menu-level-picker" aria-label="Choose a level"></div>
+      <p class="selected-level-note" id="selected-level-note">Select an unlocked level.</p>
+      <button class="button button-primary menu-button" id="menu-level-start" disabled>Start Selected Level →</button>
+      <button class="button button-secondary menu-button" id="levels-back">Back to Menu</button>
+    </div>
+  </section>
+
+  <section class="menu-screen is-hidden" id="shop-menu" aria-label="Snake skin shop">
+    <div class="menu-card menu-card-wide">
+      <p class="eyebrow">CUSTOMIZE YOUR SNAKE</p>
+      <h2>Skin Shop</h2>
+      <p class="coin-wallet">🪙 Your coins: <strong id="shop-coins">0</strong></p>
+      <p class="menu-description">Complete levels to earn coins. Buy a skin once, then equip it whenever you want.</p>
+      <div class="skin-grid" id="skin-grid"></div>
+      <p class="selected-level-note" id="shop-message" aria-live="polite">Choose a skin to buy or equip.</p>
+      <button class="button button-secondary menu-button" id="shop-back">Back to Menu</button>
+    </div>
+  </section>
+
+  <section class="menu-screen is-hidden" id="settings-menu" aria-label="Settings">
+    <div class="menu-card">
+      <p class="eyebrow">PERSONALIZE YOUR GAME</p>
+      <h2>Settings</h2>
+      <label class="settings-label" for="menu-speed-control">Game speed <output id="menu-speed-value">1.00×</output></label>
+      <input id="menu-speed-control" type="range" min="0.5" max="2" step="0.25" value="1" aria-label="Game speed">
+      <p class="menu-description">Chill is slower; Fast is more challenging.</p>
+      <label class="music-setting" for="background-music-toggle"><input id="background-music-toggle" type="checkbox" checked> <span><strong>Background Music</strong><small>Turn game music on or off</small></span></label>
+      <div class="custom-music-panel">
+        <strong>🎵 Your Own Songs</strong>
+        <p class="menu-description">Choose MP3 or other audio files from your computer/phone.</p>
+        <label class="button button-secondary menu-button file-picker-label" for="custom-song-files">Choose Songs</label>
+        <input id="custom-song-files" type="file" accept="audio/*,.mp3,.wav,.ogg,.m4a" multiple>
+        <p id="custom-song-status" class="custom-song-status" aria-live="polite">No songs selected — arcade music will play.</p>
+        <div class="music-controls">
+          <button class="button button-secondary" id="custom-song-play" type="button">▶ Play</button>
+          <button class="button button-secondary" id="custom-song-next" type="button">⏭ Next</button>
+        </div>
+        <label class="settings-label" for="custom-song-volume">Music volume <output id="custom-song-volume-value">70%</output></label>
+        <input id="custom-song-volume" type="range" min="0" max="1" step="0.05" value="0.7" aria-label="Music volume">
+      </div>
+      <button class="button button-primary menu-button" id="settings-save">Save Settings</button>
+      <button class="button button-secondary menu-button" id="settings-back">Back to Menu</button>
+    </div>
+  </section>
+
+  <section class="menu-screen is-hidden" id="extras-menu" aria-label="Rewards and extras">
+    <div class="menu-card menu-card-wide">
+      <p class="eyebrow">BONUSES • THEMES • RECORDS</p>
+      <h2>Rewards & Extras</h2>
+      <div class="daily-reward-card">
+        <strong>🎁 Daily Reward</strong>
+        <p id="daily-reward-info" class="menu-description">Claim today's coins!</p>
+        <button class="button button-primary menu-button" id="daily-claim">Claim Daily Coins</button>
+      </div>
+      <h3 class="extras-heading">🌌 Arena Theme</h3>
+      <p class="menu-description">Choose a background for your game.</p>
+      <div class="theme-grid" id="theme-grid"></div>
+      <h3 class="extras-heading">🏆 Achievements</h3>
+      <div class="achievement-list" id="achievement-list"></div>
+      <h3 class="extras-heading">📊 High Scores</h3>
+      <div class="highscore-list" id="highscore-list"></div>
+      <button class="button button-secondary menu-button" id="extras-back">Back to Menu</button>
+    </div>
+  </section>
+
+  <section class="menu-screen is-hidden" id="online-menu" aria-label="Online room competition">
+    <div class="menu-card menu-card-wide">
+      <p class="eyebrow">REAL-TIME MULTIPLAYER</p>
+      <h2>Online Room</h2>
+      <p class="menu-description">Create a room or join a friend's room code. Both players must use the same entry fee.</p>
+      <label class="settings-label" for="online-player-name">Player name</label>
+      <input id="online-player-name" class="room-input" maxlength="18" placeholder="Your name" value="Player">
+      <label class="settings-label" for="online-entry-fee">Entry coins (both players)</label>
+      <input id="online-entry-fee" class="room-input" type="number" min="0" max="10000" step="5" value="20">
+      <button class="button button-primary menu-button" id="room-create">Create Room</button>
+      <div class="room-join-row"><input id="online-room-code" class="room-input" maxlength="6" placeholder="ROOM CODE" aria-label="Room code"><button class="button button-secondary" id="room-join">Join Room</button></div>
+      <div id="room-status" class="room-status" role="status" aria-live="polite">Connect to the online service to create or join a room.</div>
+      <div id="room-lobby" class="room-lobby is-hidden">
+        <p>Room code</p><strong id="room-code-display">------</strong>
+        <p id="room-players-display">Waiting for opponent…</p>
+        <p id="room-score-display">First player to 20 apples wins.</p>
+        <button class="button button-primary menu-button" id="room-start" disabled>Start Match</button>
+        <button class="button button-secondary menu-button" id="room-leave">Leave Room</button>
+      </div>
+      <button class="button button-secondary menu-button" id="room-back">Back to Menu</button>
+    </div>
+  </section>
+
+  <main class="game-shell" id="game-app">
+    <header class="topbar">
+      <a class="brand" href="#" aria-label="Snake game home">
+        <span class="brand-mark" aria-hidden="true">S</span>
+        <span>snake<span class="brand-dot">.</span></span>
+      </a>
+      <p class="topbar-note">hassn_a_develops</p>
+    </header>
+
+    <section class="game-layout" aria-label="Snake game">
+      <div class="game-column">
+        <div class="game-heading">
+          <div>
+            <p class="eyebrow">ARCADE / 001</p>
+            <h1>SNAKE</h1>
+          </div>
+          <span class="status"><span class="status-dot"></span><span id="status-text">READY</span></span>
+        </div>
+
+        <div class="board-frame">
+          <canvas id="game-canvas" width="600" height="600" aria-label="Snake game board"></canvas>
+          <div class="game-overlay" id="game-overlay">
+            <div class="overlay-card">
+              <span class="overlay-icon" id="overlay-icon" aria-hidden="true">↗</span>
+              <p class="eyebrow" id="overlay-eyebrow">READY WHEN YOU ARE</p>
+              <h2 id="overlay-title">Let's play.</h2>
+              <p id="overlay-message">Choose an unlocked level to begin. There are 50 levels. Each new level requires 5 more apples than the previous one.</p>
+              <div class="level-picker" id="level-picker" aria-label="Choose a level"></div>
+              <button class="button button-primary" id="start-button" type="button">Start selected level <span aria-hidden="true">→</span></button>
+            </div>
+          </div>
+        </div>
+
+        <div class="mobile-controls" aria-label="Touch controls">
+          <button class="control-button control-up" type="button" data-direction="up" aria-label="Move up">↑</button>
+          <button class="control-button control-left" type="button" data-direction="left" aria-label="Move left">←</button>
+          <button class="control-button control-down" type="button" data-direction="down" aria-label="Move down">↓</button>
+          <button class="control-button control-right" type="button" data-direction="right" aria-label="Move right">→</button>
+        </div>
+
+        <p class="keyboard-hint"><kbd>↑</kbd><kbd>←</kbd><kbd>↓</kbd><kbd>→</kbd> or <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> to move <span class="hint-divider">·</span> <kbd>Space</kbd> to pause</p>
+      </div>
+
+      <aside class="sidebar">
+        <div class="score-card">
+          <p class="eyebrow">🪙 COINS</p>
+          <p class="score-value" id="game-coins">000</p>
+        </div>
+        <div class="score-card">
+          <p class="eyebrow">YOUR SCORE</p>
+          <p class="score-value" id="score-value">0000</p>
+          <p class="score-caption">apples collected</p>
+        </div>
+
+        <div class="stats-grid">
+          <div class="stat-card">
+            <span class="stat-icon" aria-hidden="true">◆</span>
+            <p class="eyebrow">LEVEL</p>
+            <p class="stat-value" id="level-value">01</p>
+          </div>
+          <div class="stat-card">
+            <span class="stat-icon" aria-hidden="true">✳</span>
+            <p class="eyebrow">BEST</p>
+            <p class="stat-value" id="best-value">0000</p>
+          </div>
+          <div class="stat-card">
+            <span class="stat-icon speed-icon" aria-hidden="true">↗</span>
+            <p class="eyebrow">SPEED</p>
+            <p class="stat-value" id="speed-value">1.00<span class="stat-unit">×</span></p>
+          </div>
+        </div>
+
+        <button class="button button-secondary" id="pause-button" type="button" disabled>
+          <span id="pause-icon" aria-hidden="true">Ⅱ</span>
+          <span id="pause-label">Pause game</span>
+        </button>
+
+        <div class="speed-control">
+          <div class="speed-control-heading">
+            <label class="eyebrow" for="speed-control">SPEED CONTROL</label>
+            <output id="speed-control-value" for="speed-control">1.00×</output>
+          </div>
+        <input id="speed-control" type="range" min="0.5" max="2" step="0.25" value="1" aria-label="Game speed">
+          <div class="speed-labels"><span>Chill</span><span>Fast</span></div>
+        </div>
+
+        <div class="how-to">
+          <p class="eyebrow">HOW TO PLAY</p>
+          <p>Guide your snake to the apples. There are 50 levels. Level 1 needs 5 apples, level 2 needs 10, level 3 needs 15, and each next level needs 5 more apples than the last. Every level changes the arena and adds more obstacles.</p>
+          <div class="rule"><span class="rule-dot"></span>don't hit the walls</div>
+          <div class="rule"><span class="rule-dot"></span>Don't bite your tail</div>
+        </div>
+
+        <p class="footer-note">Take it one turn at a time.</p>
+      </aside>
+    </section>
+  </main>
+</body>
+</html>
